@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.implementation
 import org.gradle.kotlin.dsl.java
 
 plugins {
@@ -35,6 +36,8 @@ dependencies {
     testAnnotationProcessor("org.projectlombok:lombok")
     implementation("nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect")
     implementation ("org.springframework.boot:spring-boot-starter-validation")
+    implementation ("org.springframework.boot:spring-boot-starter-security")
+    implementation ("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
 }
 
 tasks.withType<Test> {
