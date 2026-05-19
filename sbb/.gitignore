@@ -38,3 +38,6 @@ out/
 
 ### db ###
 *.db
+
+### readme ####
+README.md
