@@ -1,5 +1,7 @@
 package com.mysite.sbb.question;
 
+import com.mysite.sbb.CommonUtil;
+import com.mysite.sbb.answer.Answer;
 import com.mysite.sbb.answer.AnswerForm;
 import com.mysite.sbb.user.SiteUser;
 import com.mysite.sbb.user.UserService;
@@ -16,6 +18,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Controller
@@ -24,6 +29,7 @@ public class QuestionController {
 
     private final QuestionService questionService;
     private final UserService userService;
+    private final CommonUtil commonUtil;
 
     @GetMapping("/list")
     public String list(Model model, @RequestParam(value="page", defaultValue="0") int page) {
@@ -40,6 +46,15 @@ public class QuestionController {
     @GetMapping(value = "/detail/{id}")
     public String detail(Model model, @PathVariable("id") Integer id, AnswerForm answerForm) {
         Question question = this.questionService.getQuestion(id);
+        String questionContentHtml = commonUtil.markdown(question.getContent());
+        Map<Integer, String> answerContentHtml = question.getAnswerList().stream()
+                .collect(Collectors.toMap(
+                        Answer::getId,
+                        answer -> commonUtil.markdown(answer.getContent())
+                ));
+
+        model.addAttribute("questionContentHtml", questionContentHtml);
+        model.addAttribute("answerContentHtml", answerContentHtml);
         model.addAttribute("question", question);
         return "question_detail";
     }
