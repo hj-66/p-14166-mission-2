@@ -34,11 +34,28 @@
             </div>
         </div>
     </div>
+    <!-- 댓글 표시 -->
+    <h6 class="border-bottom my-3 py-2"
+        th:text="댓글"></h6>
+    <div class="card my-3" th:each="comment, loop: ${commentList}" th:id="|comment_${comment.id}|">
+        <div class="card-body">
+            <div class="card-text" th:utext="${comment.content}"></div>
+        </div>
+    </div>
+    <!-- 댓글 표시 끝 -->
+    <!-- 댓글 작성 -->
+    <form th:action="@{|/comment/create/${question.id}|}" th:object="${commentForm}" method="post" class="my-3">
+        <div th:replace="~{form_errors :: formErrorsFragment}"></div>
+        <textarea sec:authorize="isAnonymous()" disabled th:field="*{content}" class="form-control" rows="10"></textarea>
+        <textarea sec:authorize="isAuthenticated()" th:field="*{content}" class="form-control" rows="10"></textarea>
+        <input type="submit" value="댓글등록" class="btn btn-primary my-2">
+    </form>
+    <!-- 댓글 작성 끝 -->
     <!-- 답변의 갯수 표시 -->
     <h5 class="border-bottom my-3 py-2"
         th:text="|${#lists.size(question.answerList)}개의 답변이 있습니다.|"></h5>
     <!-- 답변 반복 시작 -->
-    <div class="card my-3" th:each="answer : ${question.answerList}">
+    <div class="card my-3" th:each="answer, loop: ${paging}">
         <a th:id="|answer_${answer.id}|"></a>
         <div class="card-body">
             <div class="card-text" th:utext="${answerContentHtml[answer.id]}"></div>
@@ -72,6 +89,30 @@
         </div>
     </div>
     <!-- 답변 반복 끝  -->
+    <!-- 페이징처리 시작 -->
+    <div th:if="${!paging.isEmpty()}">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${!paging.hasPrevious} ? 'disabled'">
+                <a class="page-link" href="javascript:void(0)" th:data-page="${paging.number-1}">
+                    <span>이전</span>
+                </a>
+            </li>
+            <li th:each="page: ${#numbers.sequence(0, paging.totalPages-1)}"
+                th:if="${page >= paging.number-5 and page <= paging.number+5}"
+                th:classappend="${page == paging.number} ? 'active'" class="page-item">
+                <a th:text="${page}" class="page-link" href="javascript:void(0)" th:data-page="${page}"></a>
+            </li>
+            <li class="page-item" th:classappend="${!paging.hasNext} ? 'disabled'">
+                <a class="page-link" href="javascript:void(0)" th:data-page="${paging.number+1}">
+                    <span>다음</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+    <!-- 페이징처리 끝 -->
+    <form th:action="@{|/question/detail/${question.id}|}" method="get" id="answerPageForm">
+        <input type="hidden" id="page" name="page" th:value="${paging.number}">
+    </form>
     <!-- 답변 작성 -->
     <form th:action="@{|/answer/create/${question.id}|}" th:object="${answerForm}" method="post" class="my-3">
         <div th:replace="~{form_errors :: formErrorsFragment}"></div>
@@ -95,6 +136,13 @@
             if(confirm("정말로 추천하시겠습니까?")) {
                 location.href = this.dataset.uri;
             };
+        });
+    });
+    const page_elements = document.getElementsByClassName("page-link");
+    Array.from(page_elements).forEach(function(element) {
+        element.addEventListener('click', function() {
+            document.getElementById('page').value = this.dataset.page;
+            document.getElementById('answerPageForm').submit();
         });
     });
 </script>

@@ -3,6 +3,10 @@ package com.mysite.sbb.question;
 import com.mysite.sbb.CommonUtil;
 import com.mysite.sbb.answer.Answer;
 import com.mysite.sbb.answer.AnswerForm;
+import com.mysite.sbb.answer.AnswerService;
+import com.mysite.sbb.comment.Comment;
+import com.mysite.sbb.comment.CommentForm;
+import com.mysite.sbb.comment.CommentService;
 import com.mysite.sbb.user.SiteUser;
 import com.mysite.sbb.user.UserService;
 import jakarta.validation.Valid;
@@ -27,7 +31,9 @@ import java.util.stream.Collectors;
 @RequestMapping("/question")
 public class QuestionController {
 
+    private final CommentService commentService;
     private final QuestionService questionService;
+    private final AnswerService answerService;
     private final UserService userService;
     private final CommonUtil commonUtil;
 
@@ -46,15 +52,20 @@ public class QuestionController {
     }
 
     @GetMapping(value = "/detail/{id}")
-    public String detail(Model model, @PathVariable("id") Integer id, AnswerForm answerForm) {
+    public String detail(Model model, @PathVariable("id") Integer id, AnswerForm answerForm, CommentForm commentForm, @RequestParam(value="page", defaultValue="0") int page) {
         Question question = this.questionService.getQuestion(id);
         String questionContentHtml = commonUtil.markdown(question.getContent());
+        Page<Answer> paging = this.answerService.getList(question, page);
+        List<Comment> commentList = this.commentService.getCommentList(question);
+
         Map<Integer, String> answerContentHtml = question.getAnswerList().stream()
                 .collect(Collectors.toMap(
                         Answer::getId,
                         answer -> commonUtil.markdown(answer.getContent())
                 ));
 
+        model.addAttribute("commentList", commentList);
+        model.addAttribute("paging", paging);
         model.addAttribute("questionContentHtml", questionContentHtml);
         model.addAttribute("answerContentHtml", answerContentHtml);
         model.addAttribute("question", question);
