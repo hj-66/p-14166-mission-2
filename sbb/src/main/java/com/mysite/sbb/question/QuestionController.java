@@ -4,6 +4,8 @@ import com.mysite.sbb.CommonUtil;
 import com.mysite.sbb.answer.Answer;
 import com.mysite.sbb.answer.AnswerForm;
 import com.mysite.sbb.answer.AnswerService;
+import com.mysite.sbb.category.Category;
+import com.mysite.sbb.category.CategoryService;
 import com.mysite.sbb.comment.Comment;
 import com.mysite.sbb.comment.CommentForm;
 import com.mysite.sbb.comment.CommentService;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -34,13 +37,21 @@ public class QuestionController {
     private final CommentService commentService;
     private final QuestionService questionService;
     private final AnswerService answerService;
+    private final CategoryService categoryService;
     private final UserService userService;
     private final CommonUtil commonUtil;
 
     @GetMapping("/list")
     public String list(Model model, @RequestParam(value="page", defaultValue="0") int page,
-                       @RequestParam(value="kw", defaultValue="") String kw) {
-        Page<Question> paging = this.questionService.getList(page, kw);
+                       @RequestParam(value="kw", defaultValue="") String kw , @RequestParam(value="category", required = false) Long id) {
+
+        Long categoryId = id == null ? 1 : id;
+
+        Page<Question> paging = this.questionService.getListByCategory(page, kw, categoryId);
+        List<Category> categoryList = categoryService.getList();
+
+        model.addAttribute("selectedCategoryId", categoryId);
+        model.addAttribute("categoryList", categoryList);
         model.addAttribute("paging", paging);
         model.addAttribute("kw", kw);
         return "question_list";
@@ -74,18 +85,19 @@ public class QuestionController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/create")
-    public String questionCreate(QuestionForm questionForm) {
+    public String questionCreate(Model model, QuestionForm questionForm) {
+        model.addAttribute("categoryList", categoryService.getList());
         return "question_form";
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/create")
-    public String questionCreate(@Valid QuestionForm questionForm, BindingResult bindingResult, Principal principal) {
+    public String questionCreate(@Valid QuestionForm questionForm, BindingResult bindingResult, Principal principal, Category category) {
         if (bindingResult.hasErrors()) {
             return "question_form";
         }
         SiteUser siteUser = this.userService.getUser(principal.getName());
-        this.questionService.create(questionForm.getSubject(), questionForm.getContent(), siteUser);
+        this.questionService.create(questionForm.getSubject(), questionForm.getContent(), siteUser, category);
         return "redirect:/question/list"; // 질문 저장후 질문목록으로 이동
     }
 
