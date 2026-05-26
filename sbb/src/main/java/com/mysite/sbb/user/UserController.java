@@ -1,5 +1,8 @@
 package com.mysite.sbb.user;
 
+import com.mysite.sbb.answer.Answer;
+import com.mysite.sbb.question.Question;
+import com.mysite.sbb.question.QuestionService;
 import jakarta.validation.Valid;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import lombok.RequiredArgsConstructor;
 
 import java.security.Principal;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Controller
@@ -143,5 +147,19 @@ public class UserController {
         }
 
         return "redirect:/question/list";
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/profile")
+    public String profile(Model model, Principal principal) {
+        SiteUser user = userService.getUser(principal.getName());
+        List<Question> questionList = userService.getQuestionList(user);
+        List<Answer> answerList = userService.getAnswerList(user);
+
+        model.addAttribute("user", user);
+        model.addAttribute("questionList", questionList);
+        model.addAttribute("answerList", answerList);
+
+        return "profile";
     }
 }

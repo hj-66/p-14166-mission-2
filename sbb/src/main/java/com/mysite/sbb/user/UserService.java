@@ -1,8 +1,12 @@
 package com.mysite.sbb.user;
 
 import com.mysite.sbb.DataNotFoundException;
+import com.mysite.sbb.answer.Answer;
+import com.mysite.sbb.answer.AnswerRepository;
 import com.mysite.sbb.password.PasswordResetToken;
 import com.mysite.sbb.password.PasswordResetTokenRepository;
+import com.mysite.sbb.question.Question;
+import com.mysite.sbb.question.QuestionRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -10,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,6 +25,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final QuestionRepository questionRepository;
+    private final AnswerRepository answerRepository;
 
     public SiteUser create(String username, String email, String password) {
         SiteUser user = new SiteUser();
@@ -37,6 +44,14 @@ public class UserService {
         } else {
             throw new DataNotFoundException("siteuser not found");
         }
+    }
+
+    public List<Answer> getAnswerList(SiteUser user) {
+        return user.getAnswerList();
+    }
+
+    public List<Question> getQuestionList(SiteUser user) {
+        return user.getQuestionList();
     }
 
     @Transactional
